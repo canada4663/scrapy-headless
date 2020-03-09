@@ -62,12 +62,14 @@ class HeadlessDownloadHandler(object):
         return self._default_handler.download_request(request, spider)
 
     def process_request(self, request, spider):
+        spider.logger.debug("HEADLESS REQUEST: %s" % request.url)
         driver = self.get_driver(spider)
 
         try:
             driver.get(request.url)
+            spider.logger.debug("HEADLESS REQUEST: INITIAL GET: %s" % driver.title)
             if request.driver_callback is not None:
-                request.driver_callback(driver)
+                return request.driver_callback(driver, request, spider)
 
             body = to_bytes(driver.page_source)
             curr_url = driver.current_url
@@ -86,4 +88,5 @@ class HeadlessDownloadHandler(object):
             )
             self._drivers.add(driver)
             self._data.driver = driver
+        spider.logger.debug("HEADLESS REQUEST: GET DRIVER: %s" % driver)
         return driver
