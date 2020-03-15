@@ -53,6 +53,7 @@ class HeadlessDownloadHandler(object):
         return downloader
 
     def spider_closed(self):
+        print("CLOSING HEADLESS DOWNLOADER")
         for driver in self._drivers:
             driver.quit()
         self._threadpool.stop()
@@ -108,7 +109,8 @@ class HeadlessDownloadHandler(object):
             curr_url = driver.current_url
 
         except WebDriverException as e:
-            raise ResponseFailed("WebDriverException %s" % e)
+            spider.logger.warning("WebDriverException %s" % e)
+            return HtmlResponse(request.url, status=400, request=request)
 
         return HtmlResponse(curr_url, body=body, encoding="utf-8", request=request)
 
@@ -119,7 +121,7 @@ class HeadlessDownloadHandler(object):
             driver = Remote(
                 command_executor=self.grid_url, desired_capabilities=self.capabilities
             )
-            driver.set_page_load_timeout(120)
+            driver.set_page_load_timeout(180)
             #driver.maximize_window()
             self._drivers.add(driver)
             self._data.driver = driver
